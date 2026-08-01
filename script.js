@@ -17,16 +17,18 @@
    4. Tempel keduanya di bawah ini.
    5. (Opsional) Set bin ke "Public" agar GET tidak perlu key.
 
-   Selama JSONBIN_BIN_ID belum diisi, ucapan akan otomatis
-   disimpan sementara di localStorage browser masing-masing
-   (hanya terlihat di perangkat itu) sebagai fallback.
+   Selama JSONBIN_BIN_ID / JSONBIN_API_KEY di bawah ini kosong,
+   ucapan akan otomatis disimpan sementara di localStorage browser
+   masing-masing (hanya terlihat di perangkat itu) sebagai fallback.
+   Karena keduanya sudah diisi, ucapan sekarang tersimpan bersama
+   di JSONBin dan bisa dilihat dari perangkat/browser mana pun.
 ------------------------------------------------------------ */
 const JSONBIN_BIN_ID   = "6a6da7c2da38895dfeabb4ff";
 const JSONBIN_API_KEY  = "$2a$10$nou5c3yZntdxwBqnGEEOvuCkZpg9GT4CfSp1IXgNhJpKQzhxI8NYO";
 const JSONBIN_BASE     = "https://api.jsonbin.io/v3/b/";
 
 const jsonbinReady = () =>
-  JSONBIN_BIN_ID && JSONBIN_BIN_ID !== "6a6da7c2da38895dfeabb4ff";
+  Boolean(JSONBIN_BIN_ID && JSONBIN_BIN_ID.trim() && JSONBIN_API_KEY && JSONBIN_API_KEY.trim());
 
 /* ---------------------------------------------------------
    2) TANGGAL & LOKASI ACARA
