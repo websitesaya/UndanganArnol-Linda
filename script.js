@@ -215,18 +215,35 @@ const LOKASI_RESEPSI = "Desa Haunobenak, Kecamatan Kolbano";
    ========================================================= */
 (function initGallery(){
   const grid = document.getElementById("gallery-grid");
-  const total = 10;
-  const files = [];
 
-  for (let i = 1; i <= total; i++){
-    const src = `Foto${i}.jpg`;
-    files.push(src);
+  /* -------------------------------------------------------
+     DAFTAR FOTO GALERI
+     -------------------------------------------------------
+     Tinggal tambah / hapus / ubah urutan nama file di daftar
+     ini sesuai kebutuhan. Tidak perlu berurutan atau bernomor.
+     Pastikan nama file di sini SAMA PERSIS (termasuk huruf
+     besar/kecil) dengan nama file foto yang di-upload ke GitHub.
+  ------------------------------------------------------- */
+  const files = [
+    "Foto1.jpg",
+    "Foto2.jpg",
+    "Foto3.jpg",
+    "Foto4.jpg",
+    "Foto5.jpg",
+    "Foto6.jpg",
+    "Foto7.jpg",
+    "Foto8.jpg",
+    "Foto9.jpg",
+    "Foto10.jpg"
+  ];
+
+  files.forEach((src, i) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.dataset.index = i - 1;
-    btn.innerHTML = `<img src="${src}" alt="Momen kebersamaan Arnol & Linda ${i}" loading="lazy">`;
+    btn.dataset.index = i;
+    btn.innerHTML = `<img src="${src}" alt="Momen kebersamaan Arnol & Linda ${i + 1}" loading="lazy">`;
     grid.appendChild(btn);
-  }
+  });
 
   const lightbox = document.getElementById("lightbox");
   const lbImage = document.getElementById("lb-image");
