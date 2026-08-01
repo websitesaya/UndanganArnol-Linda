@@ -51,13 +51,22 @@
     flex:1; color: var(--ivory-dim); overflow:hidden; text-overflow:ellipsis;
     white-space:nowrap; font-family: monospace; font-size: .78rem;
   }
-  .result-item button{
+  .result-item{ flex-wrap: wrap; }
+  .result-item button,
+  .result-item .wa-btn{
     background:none; border: 1px solid var(--gold-dim); color: var(--gold-light);
     padding: 6px 10px; font-family: var(--f-eyebrow); font-size:.55rem;
     letter-spacing:.1em; text-transform:uppercase; cursor:pointer; flex-shrink:0;
+    text-decoration:none; display:inline-block;
   }
-  .result-item button:hover{ background: var(--gold); color: var(--emerald-deep); }
+  .result-item button:hover,
+  .result-item .wa-btn:hover{ background: var(--gold); color: var(--emerald-deep); }
+  .result-item .wa-btn{
+    border-color:#2f6b52; color:#7fd8a6;
+  }
+  .result-item .wa-btn:hover{ background:#25D366; color:#0a2119; border-color:#25D366; }
   .result-empty{ text-align:center; color: var(--ivory-dim); padding: 30px 0; font-size:.9rem; }
+  .field-error{ border-color:#c96a5a !important; }
 </style>
 </head>
 <body>
@@ -72,8 +81,21 @@
 
   <div class="gen-field">
     <label for="base-url">Alamat Undangan (index.html)</label>
-    <input type="text" id="base-url" placeholder="https://websitesaya.github.io/UndanganArnol-Linda/">
+    <input type="text" id="base-url" placeholder="https://websitesaya.github.io/UndanganArnol-Linda/index.html">
     <small>Isi dengan alamat lengkap tempat undangan ini di-hosting.</small>
+  </div>
+
+  <div class="gen-field">
+    <label for="wa-message">Pesan Pembuka WhatsApp</label>
+    <textarea id="wa-message" placeholder="Kepada {nama}, berikut undangan kami: {link}">Kepada Bpk/Ibu/Sdr/i {nama},
+
+Tanpa mengurangi rasa hormat, izinkan kami mengundang Bapak/Ibu/Saudara/i untuk hadir memberikan doa restu di pernikahan kami.
+
+Berikut undangan digital kami, mohon dibuka ya:
+{link}
+
+Terima kasih banyak.</textarea>
+    <small>Gunakan <code>{nama}</code> untuk nama tamu dan <code>{link}</code> untuk link undangannya.</small>
   </div>
 
   <div class="gen-field">
@@ -96,15 +118,33 @@
 (function(){
   const baseInput = document.getElementById("base-url");
   const listInput = document.getElementById("guest-list");
+  const waMessageInput = document.getElementById("wa-message");
   const resultBox = document.getElementById("result");
   const btnGenerate = document.getElementById("btn-generate");
   const btnCopyAll = document.getElementById("btn-copy-all");
 
   let generatedLinks = [];
 
+  // Sebuah URL dianggap valid untuk dibagikan bila diawali http:// atau https://
+  function isValidBase(url){
+    return /^https?:\/\/.+/i.test(url.trim());
+  }
+
   function buildLink(base, name){
-    const clean = base.trim().replace(/\/$/, "") || "index.html";
+    const clean = base.trim().replace(/\/$/, "");
     return `${clean}?to=${encodeURIComponent(name.trim())}`;
+  }
+
+  function buildWaText(template, name, link){
+    return template
+      .replace(/\{nama\}/g, name)
+      .replace(/\{link\}/g, link);
+  }
+
+  function buildWaHref(name, link){
+    const template = waMessageInput.value.trim() || "Kepada {nama},\n\nBerikut undangan pernikahan kami:\n{link}";
+    const text = buildWaText(template, name, link);
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
   }
 
   function render(){
@@ -117,6 +157,7 @@
         <span class="guest">${item.name}</span>
         <span class="link">${item.link}</span>
         <button type="button" data-link="${item.link}">Salin</button>
+        <a class="wa-btn" href="${buildWaHref(item.name, item.link)}" target="_blank" rel="noopener">WhatsApp</a>
       </div>
     `).join("");
   }
@@ -124,6 +165,15 @@
   btnGenerate.addEventListener("click", () => {
     const base = baseInput.value.trim();
     const names = listInput.value.split("\n").map(n => n.trim()).filter(Boolean);
+
+    baseInput.classList.remove("field-error");
+
+    if (!isValidBase(base)){
+      baseInput.classList.add("field-error");
+      alert("Alamat Undangan belum diisi dengan benar.\n\nIsi kolom \"Alamat Undangan\" dengan alamat LENGKAP tempat undangan di-hosting, dimulai dari https://\n\nContoh:\nhttps://websitesaya.github.io/UndanganArnol-Linda/index.html\n\nJika kolom ini kosong atau salah, link yang dihasilkan tidak akan bisa dibuka oleh tamu.");
+      baseInput.focus();
+      return;
+    }
 
     if (!names.length){
       alert("Silakan isi daftar nama tamu terlebih dahulu.");
@@ -133,6 +183,8 @@
     generatedLinks = names.map(name => ({ name, link: buildLink(base, name) }));
     render();
   });
+
+  baseInput.addEventListener("input", () => baseInput.classList.remove("field-error"));
 
   resultBox.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-link]");
