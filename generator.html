@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Link Undangan — Arnol & Linda</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Cinzel:wght@500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Halaman utilitas — dipakai mempelai/panitia saja, tidak dibagikan ke tamu */
+  .gen-stage{
+    max-width: 560px; margin: 0 auto; min-height: 100vh;
+    padding: 50px 24px 80px;
+  }
+  .gen-header{ text-align:center; margin-bottom: 36px; }
+  .gen-header .eyebrow{ display:block; margin-bottom: 10px; }
+  .gen-header h1{
+    font-family: var(--f-display); font-size: 2rem; color: var(--ivory);
+  }
+  .gen-header p{ color: var(--ivory-dim); font-size: .92rem; margin-top: 8px; }
+
+  .gen-field{ margin-bottom: 22px; }
+  .gen-field label{
+    display:block; font-family: var(--f-eyebrow); font-size: .6rem;
+    letter-spacing: .18em; text-transform:uppercase; color: var(--gold-light);
+    margin-bottom: 8px;
+  }
+  .gen-field input,
+  .gen-field textarea{
+    width:100%; background: rgba(247,242,228,0.04);
+    border: 1px solid var(--line); color: var(--ivory);
+    font-family: var(--f-body); font-size: .96rem; padding: 12px 14px;
+  }
+  .gen-field textarea{ min-height: 150px; resize: vertical; }
+  .gen-field small{ display:block; margin-top:6px; color: var(--ivory-dim); font-size:.78rem; }
+
+  .gen-actions{ display:flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+  .gen-actions .btn{ flex:1; }
+
+  .result{ display:flex; flex-direction:column; gap: 10px; }
+  .result-item{
+    display:flex; align-items:center; justify-content:space-between; gap: 10px;
+    border: 1px solid var(--line); padding: 12px 14px; font-size: .88rem;
+  }
+  .result-item .guest{ color: var(--gold-light); font-family: var(--f-display); font-size: 1.05rem; white-space:nowrap; }
+  .result-item .link{
+    flex:1; color: var(--ivory-dim); overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; font-family: monospace; font-size: .78rem;
+  }
+  .result-item button{
+    background:none; border: 1px solid var(--gold-dim); color: var(--gold-light);
+    padding: 6px 10px; font-family: var(--f-eyebrow); font-size:.55rem;
+    letter-spacing:.1em; text-transform:uppercase; cursor:pointer; flex-shrink:0;
+  }
+  .result-item button:hover{ background: var(--gold); color: var(--emerald-deep); }
+  .result-empty{ text-align:center; color: var(--ivory-dim); padding: 30px 0; font-size:.9rem; }
+</style>
+</head>
+<body>
+
+<div class="gen-stage">
+  <div class="gen-header">
+    <span class="eyebrow">Panitia / Mempelai</span>
+    <h1>Generator Link Undangan</h1>
+    <p>Buat tautan undangan yang berisi nama tamu, agar setiap tamu<br>
+      melihat sapaan pribadi saat membuka undangan.</p>
+  </div>
+
+  <div class="gen-field">
+    <label for="base-url">Alamat Undangan (index.html)</label>
+    <input type="text" id="base-url" placeholder="https://namadomain.com/index.html">
+    <small>Isi dengan alamat lengkap tempat undangan ini di-hosting.</small>
+  </div>
+
+  <div class="gen-field">
+    <label for="guest-list">Daftar Nama Tamu</label>
+    <textarea id="guest-list" placeholder="Satu nama per baris, contoh:&#10;Bpk. Yohanes Talan&#10;Ibu Ester Kause&#10;Keluarga Besar Nesimnasi"></textarea>
+    <small>Tulis satu nama tamu di setiap baris.</small>
+  </div>
+
+  <div class="gen-actions">
+    <button class="btn" id="btn-generate" type="button">Buat Semua Link</button>
+    <button class="btn" id="btn-copy-all" type="button">Salin Semua</button>
+  </div>
+
+  <div class="result" id="result">
+    <p class="result-empty">Link yang dihasilkan akan muncul di sini.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const baseInput = document.getElementById("base-url");
+  const listInput = document.getElementById("guest-list");
+  const resultBox = document.getElementById("result");
+  const btnGenerate = document.getElementById("btn-generate");
+  const btnCopyAll = document.getElementById("btn-copy-all");
+
+  let generatedLinks = [];
+
+  function buildLink(base, name){
+    const clean = base.trim().replace(/\/$/, "") || "index.html";
+    return `${clean}?to=${encodeURIComponent(name.trim())}`;
+  }
+
+  function render(){
+    if (!generatedLinks.length){
+      resultBox.innerHTML = '<p class="result-empty">Link yang dihasilkan akan muncul di sini.</p>';
+      return;
+    }
+    resultBox.innerHTML = generatedLinks.map(item => `
+      <div class="result-item">
+        <span class="guest">${item.name}</span>
+        <span class="link">${item.link}</span>
+        <button type="button" data-link="${item.link}">Salin</button>
+      </div>
+    `).join("");
+  }
+
+  btnGenerate.addEventListener("click", () => {
+    const base = baseInput.value.trim();
+    const names = listInput.value.split("\n").map(n => n.trim()).filter(Boolean);
+
+    if (!names.length){
+      alert("Silakan isi daftar nama tamu terlebih dahulu.");
+      return;
+    }
+
+    generatedLinks = names.map(name => ({ name, link: buildLink(base, name) }));
+    render();
+  });
+
+  resultBox.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-link]");
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.link).then(() => {
+      btn.textContent = "Tersalin";
+      setTimeout(() => { btn.textContent = "Salin"; }, 1200);
+    });
+  });
+
+  btnCopyAll.addEventListener("click", () => {
+    if (!generatedLinks.length){
+      alert("Belum ada link untuk disalin. Klik \"Buat Semua Link\" terlebih dahulu.");
+      return;
+    }
+    const text = generatedLinks.map(i => `${i.name}: ${i.link}`).join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      btnCopyAll.textContent = "Tersalin!";
+      setTimeout(() => { btnCopyAll.textContent = "Salin Semua"; }, 1200);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
