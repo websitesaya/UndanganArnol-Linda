@@ -25,10 +25,17 @@
 
   .gen-field{ margin-bottom: 22px; }
   .gen-field label{
-    display:block; font-family: var(--f-eyebrow); font-size: .6rem;
+    display:flex; align-items:center; justify-content:space-between;
+    font-family: var(--f-eyebrow); font-size: .6rem;
     letter-spacing: .18em; text-transform:uppercase; color: var(--gold-light);
     margin-bottom: 8px;
   }
+  .gen-field label .link-toggle{
+    text-transform:none; letter-spacing:normal; font-family: var(--f-body);
+    font-size: .78rem; background:none; border:none; color: var(--gold-light);
+    text-decoration:underline; cursor:pointer; padding:0;
+  }
+  .gen-field input[readonly]{ color: var(--ivory-dim); }
   .gen-field input,
   .gen-field textarea{
     width:100%; background: rgba(247,242,228,0.04);
@@ -79,10 +86,13 @@
       melihat sapaan pribadi saat membuka undangan.</p>
   </div>
 
-  <div class="gen-field">
-    <label for="base-url">Alamat Undangan (index.html)</label>
-    <input type="text" id="base-url" placeholder="https://websitesaya.github.io/UndanganArnol-Linda/index.html">
-    <small>Isi dengan alamat lengkap tempat undangan ini di-hosting.</small>
+  <div class="gen-field" id="base-url-field">
+    <label for="base-url">
+      Alamat Undangan (index.html)
+      <button type="button" id="toggle-base-edit" class="link-toggle">Ubah</button>
+    </label>
+    <input type="text" id="base-url" placeholder="https://namadomain.com/index.html" readonly>
+    <small id="base-url-hint">Otomatis terdeteksi dari alamat halaman ini. Cukup isi daftar nama tamu di bawah.</small>
   </div>
 
   <div class="gen-field">
@@ -117,6 +127,8 @@ Terima kasih banyak.</textarea>
 <script>
 (function(){
   const baseInput = document.getElementById("base-url");
+  const baseHint = document.getElementById("base-url-hint");
+  const toggleBaseEdit = document.getElementById("toggle-base-edit");
   const listInput = document.getElementById("guest-list");
   const waMessageInput = document.getElementById("wa-message");
   const resultBox = document.getElementById("result");
@@ -124,6 +136,39 @@ Terima kasih banyak.</textarea>
   const btnCopyAll = document.getElementById("btn-copy-all");
 
   let generatedLinks = [];
+
+  // Deteksi otomatis alamat index.html berdasarkan lokasi generator.html ini
+  function detectBaseUrl(){
+    const loc = window.location.href.split("?")[0].split("#")[0];
+    if (/generator\.html$/i.test(loc)) return loc.replace(/generator\.html$/i, "index.html");
+    if (/\/$/.test(loc)) return loc + "index.html";
+    return loc.replace(/\/[^\/]*$/, "/index.html");
+  }
+
+  const autoDetected = /^https?:\/\//i.test(window.location.href);
+  if (autoDetected){
+    baseInput.value = detectBaseUrl();
+  } else {
+    // Dibuka langsung dari file lokal (file://), otomatis tidak bisa dipakai
+    baseInput.readOnly = false;
+    baseInput.value = "";
+    baseHint.textContent = "Tidak terdeteksi otomatis (dibuka dari file lokal). Isi manual alamat tempat undangan ini akan di-hosting.";
+    toggleBaseEdit.style.display = "none";
+  }
+
+  toggleBaseEdit.addEventListener("click", () => {
+    const editing = !baseInput.readOnly;
+    baseInput.readOnly = editing; // toggle
+    if (baseInput.readOnly){
+      toggleBaseEdit.textContent = "Ubah";
+      baseHint.textContent = "Otomatis terdeteksi dari alamat halaman ini. Cukup isi daftar nama tamu di bawah.";
+      if (!baseInput.value.trim()) baseInput.value = detectBaseUrl();
+    } else {
+      toggleBaseEdit.textContent = "Selesai";
+      baseHint.textContent = "Isi alamat lengkap tempat undangan ini di-hosting, dimulai dari https://";
+      baseInput.focus();
+    }
+  });
 
   // Sebuah URL dianggap valid untuk dibagikan bila diawali http:// atau https://
   function isValidBase(url){
@@ -170,7 +215,9 @@ Terima kasih banyak.</textarea>
 
     if (!isValidBase(base)){
       baseInput.classList.add("field-error");
-      alert("Alamat Undangan belum diisi dengan benar.\n\nIsi kolom \"Alamat Undangan\" dengan alamat LENGKAP tempat undangan di-hosting, dimulai dari https://\n\nContoh:\nhttps://websitesaya.github.io/UndanganArnol-Linda/index.html\n\nJika kolom ini kosong atau salah, link yang dihasilkan tidak akan bisa dibuka oleh tamu.");
+      baseInput.readOnly = false;
+      toggleBaseEdit.textContent = "Selesai";
+      alert("Alamat Undangan belum terisi dengan benar.\n\nSilakan isi kolom \"Alamat Undangan\" dengan alamat LENGKAP tempat undangan di-hosting, dimulai dari https://\n\nContoh:\nhttps://websitesaya.github.io/UndanganArnol-Linda/index.html\n\nJika kolom ini kosong atau salah, link yang dihasilkan tidak akan bisa dibuka oleh tamu.");
       baseInput.focus();
       return;
     }
