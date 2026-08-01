@@ -226,15 +226,9 @@ const LOKASI_RESEPSI = "Desa Haunobenak, Kecamatan Kolbano";
   ------------------------------------------------------- */
   const files = [
     "Foto1.jpg",
-    "Foto2.jpg",
-    "Foto3.jpg",
-    "Foto4.jpg",
-    "Foto5.jpg",
     "Foto6.jpg",
     "Foto7.jpg",
     "Foto8.jpg",
-    "Foto9.jpg",
-    "Foto10.jpg"
   ];
 
   files.forEach((src, i) => {
